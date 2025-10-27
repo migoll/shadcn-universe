@@ -28,7 +28,7 @@ export const ComponentNode: React.FC<NodeProps<ComponentNodeData>> = ({ id, data
       {/* Floating label - left aligned on top */}
       <div
         className={cn(
-          'absolute -top-6 left-0 text-xs uppercase tracking-wide font-semibold text-foreground/70 mb-2',
+          'absolute -top-8 left-0 text-sm uppercase tracking-wide font-semibold text-foreground/50 mb-2',
         )}
       >
         {data.label.replace(' • Variant 1', '').replace(' • Variant 2', '').replace(' • Variant 3', '').replace(' • Variant 4', '').replace(' • Variant 5', '')}

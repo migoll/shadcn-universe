@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -20,22 +20,38 @@ import { useComponentStore } from '@/store/component-store';
 import { COMPONENT_REGISTRY, getAllCategories, getComponentsByCategory, CATEGORY_DISPLAY_NAMES } from '@/lib/component-registry';
 import { useEditorStore } from '@/store/editor-store';
 import { toast } from 'sonner';
+import { calculateLayout, getVariantPositions } from '@/lib/layout-calculator';
 
 const CategoryLabelNode = ({ data }: any) => (
-  <div className="text-lg font-bold text-foreground/80 uppercase tracking-wider pointer-events-none">
+  <div className="text-2xl font-bold text-foreground uppercase tracking-wider pointer-events-none drop-shadow-lg">
     {data.label}
   </div>
 );
 
+const BlockNode = ({ data, selected }: any) => {
+  return (
+    <div 
+      className="absolute border border-gray-200 bg-gray-50/30 pointer-events-none transition-opacity duration-200" 
+      style={{ 
+        width: data.width, 
+        height: data.height,
+        opacity: selected ? 0.8 : 0.2 
+      }} 
+    />
+  );
+};
+
 const nodeTypes: NodeTypes = {
   componentNode: ComponentNode,
   categoryLabel: CategoryLabelNode,
+  block: BlockNode,
 };
 
 export const InfiniteCanvas: React.FC = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [showBlocks, setShowBlocks] = useState(false);
   
   const canvasNodes = useCanvasStore((state) => state.nodes);
   const setCanvasNodes = useCanvasStore((state) => state.setNodes);
@@ -46,39 +62,84 @@ export const InfiniteCanvas: React.FC = () => {
   const redo = useCanvasStore((state) => state.redo);
   
   const addInstance = useComponentStore((state) => state.addInstance);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize canvas with one base node per component, arranged in horizontal bands per category
+  // Initialize canvas with layout-based positioning - only once
   useEffect(() => {
+    if (isInitialized) return;
+    
     const categories = getAllCategories();
     const initialNodes: any[] = [];
     
-    let yOffset = 50;
+    // Calculate layout for variants (initially empty)
+    const getVariants = (componentId: string) => {
+      return [];
+    };
     
+    const layout = calculateLayout(
+      getAllCategories() as any,
+      getComponentsByCategory as any,
+      getVariants
+    );
+    
+    // Add block nodes and category labels
+    layout.blocks.forEach((block) => {
+      const category = categories.find((cat) => block.category === cat);
+      if (!category) return;
+      
+      // Find if we've already added the category label
+      const hasCategoryLabel = initialNodes.find(
+        (n) => n.id === `category-${category}` && n.type === 'categoryLabel'
+      );
+      
+      if (!hasCategoryLabel) {
+        const categoryNodes = layout.blocks.filter((b) => b.category === category);
+        if (categoryNodes.length > 0) {
+          const firstBlockInCategory = Math.min(...categoryNodes.map((b) => b.y)) - 120;
+          
+          initialNodes.push({
+            id: `category-${category}`,
+            type: 'categoryLabel',
+            position: { x: 50, y: firstBlockInCategory },
+            selectable: false,
+            draggable: false,
+            data: {
+              label: CATEGORY_DISPLAY_NAMES[category],
+            },
+          });
+        }
+      }
+    });
+    
+    // Add component nodes based on layout
     categories.forEach((category) => {
       const components = getComponentsByCategory(category);
-      let xOffset = 50;
-      const categoryLabelY = yOffset - 20;
-      
-      // Add category label node
-      const labelNode = {
-        id: `category-${category}`,
-        type: 'categoryLabel',
-        position: { x: xOffset, y: categoryLabelY },
-        selectable: false,
-        draggable: false,
-        data: {
-          label: CATEGORY_DISPLAY_NAMES[category],
-        },
-      };
-      initialNodes.push(labelNode);
       
       components.forEach((component) => {
-        const nodeId = component.id; // stable id per component base
+        const block = layout.blocks.find((b) => b.componentId === component.id);
+        if (!block) return;
         
+        const nodeId = component.id;
+        
+        // Add block node
+        initialNodes.push({
+          id: `block-${nodeId}`,
+          type: 'block',
+          position: { x: block.x - 20, y: block.y - 20 },
+          selectable: false,
+          draggable: false,
+          zIndex: -1,
+          data: {
+            width: block.width + 40,
+            height: block.height + 40,
+          },
+        });
+        
+        // Add base component node
         const node = {
           id: nodeId,
           type: 'componentNode',
-          position: { x: xOffset, y: yOffset },
+          position: { x: block.x, y: block.y },
           data: {
             componentId: component.id,
             props: { ...component.defaultProps },
@@ -87,7 +148,6 @@ export const InfiniteCanvas: React.FC = () => {
           },
         };
         
-        // Add to component store (base instance)
         addInstance({
           id: nodeId,
           componentId: component.id,
@@ -95,22 +155,19 @@ export const InfiniteCanvas: React.FC = () => {
         });
         
         initialNodes.push(node);
-        
-        xOffset += 200; // horizontal spacing between components in the band
       });
-      
-      // Move to next horizontal band for next category with more space for label
-      yOffset += 250;
     });
     
     setNodes(initialNodes);
     setCanvasNodes(initialNodes);
+    setIsInitialized(true);
   }, []);
 
-  // Sync nodes with canvas store
+  // Sync nodes with canvas store (but don't reinitialize)
   useEffect(() => {
+    if (!isInitialized) return;
     setNodes(canvasNodes);
-  }, [canvasNodes, setNodes]);
+  }, [canvasNodes, setNodes, isInitialized]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -214,6 +271,7 @@ export const InfiniteCanvas: React.FC = () => {
         <MiniMap
           nodeColor={(node) => {
             if (node.type === 'categoryLabel') return 'transparent';
+            if (node.type === 'block') return 'transparent';
             return '#e5e7eb';
           }}
           maskColor="rgba(0, 0, 0, 0.1)"

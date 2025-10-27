@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Edge, Node, ReactFlowInstance, Viewport } from 'reactflow';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { COMPONENT_REGISTRY } from '@/lib/component-registry';
+import { getVariantPositions } from '@/lib/layout-calculator';
 
 interface CanvasState {
   nodes: Node[];
@@ -184,12 +185,18 @@ export const useCanvasStore = create<CanvasState>()(
     // Compute new id and position (32px gap)
     const variantIndex = groupNodes.filter((n) => n.id.startsWith(`${componentId}-variant-`)).length + 1;
     const newId = `${componentId}-variant-${variantIndex}`;
-    // Place variant 32px to the right of the last node in the group
-    // But we need to account for component width - estimate 200px per component
+    
+    // Use the layout calculator to get proper positioning
+    const componentMetadata = COMPONENT_REGISTRY.find(c => c.id === componentId);
+    const estimatedWidth = componentMetadata ? 200 : 180; // Default component width
+    
     const newNode: Node = {
       id: newId,
       type: 'componentNode',
-      position: { x: lastNode.position.x + 200 + 32, y: baseNode.position.y },
+      position: { 
+        x: lastNode.position.x + estimatedWidth + 32, 
+        y: baseNode.position.y 
+      },
       data: {
         componentId,
         props: { ...(sourceNode as any).data?.props },

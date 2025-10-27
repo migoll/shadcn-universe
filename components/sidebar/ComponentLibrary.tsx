@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, X, ChevronLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ export const ComponentLibrary: React.FC = () => {
   const [expandedCategories, setExpandedCategories] = useState<Set<ComponentCategory>>(
     new Set(getAllCategories())
   );
+  const [isCollapsed, setIsCollapsed] = useState(false);
   
   const centerOnNode = useCanvasStore((state) => state.centerOnNode);
 
@@ -45,23 +46,46 @@ export const ComponentLibrary: React.FC = () => {
   const categories = getAllCategories();
 
   return (
-    <div className="w-64 h-screen bg-background border-r border-border flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-border">
-        <h2 className="text-xl font-semibold mb-3 text-foreground">Components</h2>
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search components..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-      </div>
+    <div className="relative">
+      {isCollapsed ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 m-2 bg-input/30 hover:bg-input/50"
+          onClick={() => setIsCollapsed(false)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      ) : (
+        <div className={cn(
+          "h-screen bg-background border-r border-border flex flex-col transition-all duration-300 ease-in-out",
+          "w-64"
+        )}>
+          {/* Header */}
+          <div className="p-4 border-b border-border relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 h-8 w-8 p-0"
+              onClick={() => setIsCollapsed(true)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <h2 className="text-xl font-semibold mb-3 text-foreground">Components</h2>
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search components..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
 
-      {/* Component List */}
-      <ScrollArea className="flex-1 min-h-0">
+          {/* Component List */}
+          <ScrollArea className="flex-1 min-h-0">
         <div className="p-2">
           {searchQuery ? (
             // Show filtered results
@@ -116,8 +140,10 @@ export const ComponentLibrary: React.FC = () => {
               );
             })
           )}
-        </div>
-      </ScrollArea>
+          </div>
+        </ScrollArea>
+      </div>
+      )}
     </div>
   );
 };
