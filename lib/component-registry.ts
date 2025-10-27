@@ -20,6 +20,12 @@ export interface PropDefinition {
   description?: string;
 }
 
+export interface TextSlot {
+  key: string;
+  label: string;
+  default: string;
+}
+
 export interface ComponentMetadata {
   id: string;
   name: string;
@@ -27,6 +33,7 @@ export interface ComponentMetadata {
   category: ComponentCategory;
   description: string;
   props: PropDefinition[];
+  textSlots?: TextSlot[];
   defaultProps: Record<string, any>;
   exampleContent?: string;
   hasChildren?: boolean;
@@ -43,10 +50,12 @@ export const COMPONENT_REGISTRY: ComponentMetadata[] = [
     props: [
       { name: "variant", type: "enum", options: ["default", "destructive", "outline", "secondary", "ghost", "link"], default: "default" },
       { name: "size", type: "enum", options: ["default", "sm", "lg", "icon"], default: "default" },
-      { name: "disabled", type: "boolean", default: false },
-      { name: "children", type: "string", default: "Button" }
+      { name: "disabled", type: "boolean", default: false }
     ],
-    defaultProps: { variant: "default", size: "default", children: "Button" },
+    textSlots: [
+      { key: "label", label: "Button Label", default: "Button" }
+    ],
+    defaultProps: { variant: "default", size: "default" },
     hasChildren: true,
     exampleContent: "Click me"
   },
@@ -58,10 +67,12 @@ export const COMPONENT_REGISTRY: ComponentMetadata[] = [
     description: "Text input field",
     props: [
       { name: "type", type: "enum", options: ["text", "email", "password", "number", "tel", "url"], default: "text" },
-      { name: "placeholder", type: "string", default: "Enter text..." },
       { name: "disabled", type: "boolean", default: false }
     ],
-    defaultProps: { type: "text", placeholder: "Enter text..." }
+    textSlots: [
+      { key: "placeholder", label: "Placeholder", default: "Enter text..." }
+    ],
+    defaultProps: { type: "text" }
   },
   {
     id: "textarea",
@@ -70,11 +81,13 @@ export const COMPONENT_REGISTRY: ComponentMetadata[] = [
     category: "form",
     description: "Multi-line text input",
     props: [
-      { name: "placeholder", type: "string", default: "Type your message..." },
       { name: "disabled", type: "boolean", default: false },
       { name: "rows", type: "number", default: 4 }
     ],
-    defaultProps: { placeholder: "Type your message...", rows: 4 }
+    textSlots: [
+      { key: "placeholder", label: "Placeholder", default: "Type your message..." }
+    ],
+    defaultProps: { rows: 4 }
   },
   {
     id: "checkbox",

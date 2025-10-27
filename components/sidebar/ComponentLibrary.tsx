@@ -45,12 +45,12 @@ export const ComponentLibrary: React.FC = () => {
   const categories = getAllCategories();
 
   return (
-    <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-64 h-screen bg-background border-r border-border flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold mb-3">Components</h2>
+      <div className="p-4 border-b border-border">
+        <h2 className="text-xl font-semibold mb-3 text-foreground">Components</h2>
         <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search components..."
             value={searchQuery}
@@ -61,7 +61,7 @@ export const ComponentLibrary: React.FC = () => {
       </div>
 
       {/* Component List */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-2">
           {searchQuery ? (
             // Show filtered results
@@ -70,7 +70,7 @@ export const ComponentLibrary: React.FC = () => {
                 <Button
                   key={component.id}
                   variant="ghost"
-                  className="w-full justify-start text-sm"
+                  className="w-full justify-start text-base"
                   onClick={() => handleNavigateToComponent(component.id)}
                 >
                   <span className="truncate">{component.displayName}</span>
@@ -87,7 +87,7 @@ export const ComponentLibrary: React.FC = () => {
                 <div key={category} className="mb-2">
                   <button
                     onClick={() => toggleCategory(category)}
-                    className="w-full flex items-center justify-between px-2 py-1.5 hover:bg-gray-100 rounded text-sm font-medium"
+                    className="w-full flex items-center justify-between px-2 py-1.5 hover:bg-accent hover:text-accent-foreground rounded text-base font-medium text-foreground"
                   >
                     <span>{CATEGORY_DISPLAY_NAMES[category]}</span>
                     {isExpanded ? (
@@ -104,7 +104,7 @@ export const ComponentLibrary: React.FC = () => {
                           key={component.id}
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start text-xs font-normal"
+                          className="w-full justify-start text-sm font-normal"
                           onClick={() => handleNavigateToComponent(component.id)}
                         >
                           {component.displayName}

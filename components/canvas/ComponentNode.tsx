@@ -24,40 +24,39 @@ export const ComponentNode: React.FC<NodeProps<ComponentNodeData>> = ({ id, data
   };
 
   return (
-    <div className="group">
-      {/* Drag handle bar */}
+    <div className="group relative">
+      {/* Floating label - left aligned on top */}
       <div
         className={cn(
-          'drag-handle inline-flex items-center gap-2 px-2 py-1 rounded border',
-          selected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-transparent bg-transparent text-gray-500'
+          'absolute -top-6 left-0 text-xs uppercase tracking-wide font-semibold text-foreground/70 mb-2',
         )}
-        onClick={(e) => e.stopPropagation()}
       >
-        <span className="text-[10px] uppercase tracking-wide font-semibold">{data.label}</span>
-        {/* Hover + button */}
-        <button
-          className="ml-2 hidden group-hover:inline-flex items-center justify-center w-4 h-4 rounded bg-purple-600 text-white text-[10px]"
-          title="Add variant"
-          onClick={(e) => {
-            e.stopPropagation();
-            const menu = document.getElementById(`variant-menu-${id}`);
-            if (menu) {
-              menu.classList.remove('hidden');
-            }
-          }}
-        >
-          +
-        </button>
+        {data.label.replace(' • Variant 1', '').replace(' • Variant 2', '').replace(' • Variant 3', '').replace(' • Variant 4', '').replace(' • Variant 5', '')}
       </div>
+      
+      {/* Hover + button - positioned to the right of component */}
+      <button
+        className="absolute -right-3 top-1/2 -translate-y-1/2 hidden group-hover:inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-600 text-white text-sm z-10 shadow-lg"
+        title="Add variant"
+        onClick={(e) => {
+          e.stopPropagation();
+          const menu = document.getElementById(`variant-menu-${id}`);
+          if (menu) {
+            menu.classList.remove('hidden');
+          }
+        }}
+      >
+        +
+      </button>
 
-      {/* Tiny menu for Default/Duplicate */}
+      {/* Dropdown menu for Default/Duplicate - positioned to right of component */}
       <div
         id={`variant-menu-${id}`}
-        className="hidden absolute z-50 mt-1 rounded border bg-white shadow"
+        className="hidden absolute -right-2 top-1/2 -translate-y-1/2 z-50 bg-background border border-border rounded shadow-lg"
         onMouseLeave={(e) => (e.currentTarget.classList.add('hidden'))}
       >
         <button
-          className="block w-full px-2 py-1 text-xs hover:bg-gray-100"
+          className="block w-full px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground border-b border-border first:rounded-t last:rounded-b first:border-b-0"
           onClick={(e) => {
             e.stopPropagation();
             addVariant(data.componentId, 'default', id);
@@ -68,7 +67,7 @@ export const ComponentNode: React.FC<NodeProps<ComponentNodeData>> = ({ id, data
           Default
         </button>
         <button
-          className="block w-full px-2 py-1 text-xs hover:bg-gray-100"
+          className="block w-full px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-b"
           onClick={(e) => {
             e.stopPropagation();
             addVariant(data.componentId, 'duplicate', id);
@@ -80,9 +79,12 @@ export const ComponentNode: React.FC<NodeProps<ComponentNodeData>> = ({ id, data
         </button>
       </div>
 
-      {/* Interactive content */}
-      <div className="mt-2 cursor-pointer" onClick={handleClick}>
-        <ComponentRenderer componentId={data.componentId} props={data.props} />
+      {/* Interactive content with drag handle */}
+      <div className="relative">
+        <div className="drag-handle absolute inset-0 cursor-move" />
+        <div className="cursor-pointer" onClick={handleClick}>
+          <ComponentRenderer componentId={data.componentId} props={data.props} />
+        </div>
       </div>
     </div>
   );

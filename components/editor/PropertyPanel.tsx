@@ -9,6 +9,7 @@ import { getComponentById } from '@/lib/component-registry';
 import { Button } from '@/components/ui/button';
 import { PropEditor } from './PropEditor';
 import { CodePreview } from './CodePreview';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 export const PropertyPanel: React.FC = () => {
@@ -43,30 +44,23 @@ export const PropertyPanel: React.FC = () => {
   };
 
   const hasProps = (componentMetadata.props && componentMetadata.props.length > 0);
+  const hasTextSlots = (componentMetadata.textSlots && componentMetadata.textSlots.length > 0);
+  const textSlots = componentMetadata.textSlots ?? [];
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className={cn(
-          "fixed inset-0 bg-black/20 z-40 transition-opacity",
-          isPanelOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        )}
-        onClick={closePanel}
-      />
-      
       {/* Panel */}
       <div
         className={cn(
-          "fixed right-0 top-0 h-full w-[450px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col",
+          "fixed right-0 top-0 h-full w-[380px] bg-background border-l border-border shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col",
           isPanelOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           <div>
-            <h2 className="text-lg font-semibold">{componentMetadata.displayName}</h2>
-            <p className="text-sm text-gray-500">{componentMetadata.description}</p>
+            <h2 className="text-xl font-semibold text-foreground">{componentMetadata.displayName}</h2>
+            <p className="text-base text-muted-foreground">{componentMetadata.description}</p>
           </div>
           <Button
             variant="ghost"
@@ -83,7 +77,7 @@ export const PropertyPanel: React.FC = () => {
           {hasProps && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                <h3 className="text-base font-semibold text-foreground uppercase tracking-wide">
                   Properties
                 </h3>
                 <div className="flex items-center gap-2">
@@ -92,10 +86,17 @@ export const PropertyPanel: React.FC = () => {
                     const defaults = componentMetadata.defaultProps ?? {};
                     Object.keys(defaults).forEach((key) => handlePropChange(key, defaults[key]));
                   }}>Reset to defaults</Button>
-                  <Button variant="ghost" size="icon" onClick={() => {
-                    // simple revert one step: noop for now; history will handle in later step
-                    window.dispatchEvent(new CustomEvent('editor:revert'));
-                  }}>↩</Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => {
+                      const { undo } = useCanvasStore.getState();
+                      undo();
+                    }}
+                    title="Undo last change (Cmd+Z)"
+                  >
+                    <span>↩</span>
+                  </Button>
                 </div>
               </div>
               <div className="space-y-3">
@@ -110,10 +111,33 @@ export const PropertyPanel: React.FC = () => {
               </div>
             </div>
           )}
+          
+          {/* Text Content Section */}
+          {hasTextSlots && (
+            <div>
+              <h3 className="text-base font-semibold mb-3 text-foreground uppercase tracking-wide">
+                Content
+              </h3>
+              <div className="space-y-3">
+                {textSlots.map((slot) => (
+                  <div key={slot.key} className="space-y-2">
+                    <label className="text-xs font-medium capitalize text-foreground">
+                      {slot.label}
+                    </label>
+                    <Input
+                      value={instance.props[slot.key] ?? slot.default}
+                      onChange={(e) => handlePropChange(slot.key, e.target.value)}
+                      placeholder={slot.default}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Code Export Section */}
           <div>
-            <h3 className="text-sm font-semibold mb-3 text-gray-700 uppercase tracking-wide">
+            <h3 className="text-base font-semibold mb-3 text-foreground uppercase tracking-wide">
               Export Code
             </h3>
             <CodePreview

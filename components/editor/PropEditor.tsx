@@ -110,7 +110,7 @@ export const PropEditor: React.FC<PropEditorProps> = ({ prop, value, onChange })
       </Label>
       {renderEditor()}
       {prop.description && (
-        <p className="text-xs text-gray-500">{prop.description}</p>
+        <p className="text-xs text-muted-foreground">{prop.description}</p>
       )}
     </div>
   );

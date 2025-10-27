@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { ComponentMetadata } from '@/lib/component-registry';
 import { useEditorStore } from '@/store/editor-store';
+import { useComponentStore } from '@/store/component-store';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { generateReactCode } from '@/components/exporters/ReactExporter';
@@ -14,12 +15,19 @@ interface CodePreviewProps {
   props: Record<string, any>;
 }
 
-export const CodePreview: React.FC<CodePreviewProps> = ({ componentMetadata, props }) => {
+export const CodePreview: React.FC<CodePreviewProps> = ({ componentMetadata, props: propsProp }) => {
   const [copied, setCopied] = useState(false);
   const exportFramework = useEditorStore((state) => state.exportFramework);
   const exportStyling = useEditorStore((state) => state.exportStyling);
   const setExportFramework = useEditorStore((state) => state.setExportFramework);
   const setExportStyling = useEditorStore((state) => state.setExportStyling);
+  
+  // Get fresh props from store on each render
+  const selectedComponentId = useEditorStore((state) => state.selectedComponentId);
+  const getInstance = useComponentStore((state) => state.getInstance);
+  
+  const instance = selectedComponentId ? getInstance(selectedComponentId) : null;
+  const props = instance?.props ?? propsProp;
 
   const generateCode = () => {
     if (exportFramework === 'react') {

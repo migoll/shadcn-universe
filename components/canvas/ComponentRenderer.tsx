@@ -42,13 +42,13 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({ componentI
   try {
     switch (componentId) {
       case 'button':
-        return <Button {...props}>{props.children || 'Button'}</Button>;
+        return <Button {...props}>{props.label || 'Button'}</Button>;
         
       case 'input':
-        return <Input {...props} />;
+        return <Input {...props} placeholder={props.placeholder || 'Enter text...'} />;
         
       case 'textarea':
-        return <Textarea {...props} />;
+        return <Textarea {...props} placeholder={props.placeholder || 'Type your message...'} />;
         
       case 'checkbox':
         return (
